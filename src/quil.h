@@ -2,11 +2,15 @@
 
 #include <raylib.h>
 #include <stdbool.h>
+#include <stdint.h>
+
+#include "input/input.h"
 
 typedef struct Quil {
-    Font font_default;
+    Font    font_default;
 
-    bool is_quit;
+    UserInput  input;
+    bool       is_quit;
 } Quil;
 
 void QuilInit(Quil*);
