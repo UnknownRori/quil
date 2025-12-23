@@ -1,0 +1,4 @@
+#define RSTB_ARENA_STRICT
+#define RSTB_ARENA_BACKEND_MALLOC
+#define RSTB_ARENA_IMPLEMENTATION
+#include <rstb_arena.h>

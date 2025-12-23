@@ -4,13 +4,16 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "editor/editor.h"
 #include "input/input.h"
 
 typedef struct Quil {
-    Font    font_default;
+    Font       font_default;
 
     UserInput  input;
     bool       is_quit;
+
+    Editor     e;
 } Quil;
 
 void QuilInit(Quil*);

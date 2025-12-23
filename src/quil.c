@@ -1,17 +1,25 @@
 #include <raylib.h>
 #include <stddef.h>
 #include <assert.h>
+#include <string.h>
 
 #include "quil.h"
 #include "debug/input_debug.h"
+#include "editor/editor.h"
 #include "input/input.h"
 #include "utils/raylib.h"
+
+const char* contents = "Agus\nPamungkas\nBambang";
 
 void QuilInit(Quil* q)
 {
     assert(q != NULL);
+
     q->font_default = LoadFont("fonts/JetBrainsMonoNerdFontMono-Regular.ttf");
     SetTextureFilter(q->font_default.texture, TEXTURE_FILTER_POINT);
+
+    EditorInit(&q->e);
+    EditorLoadBuffer(&q->e, contents, strlen(contents));
 }
 
 void QuilUpdate(Quil* q)
@@ -33,5 +41,7 @@ void QuilDraw(Quil* q)
 void QuilUnload(Quil* q)
 {
     assert(q != NULL);
+
     UnloadFont(q->font_default);
+    EditorUnload(&q->e);
 }

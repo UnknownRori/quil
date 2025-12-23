@@ -3,7 +3,7 @@ debug_src = files(
 )
 
 debug_lib = static_library(
-  'input',
+  'debug',
   debug_src,
   dependencies: [raylib_dep, input_dep],
   include_directories: [inc],
