@@ -1,0 +1,4 @@
+[wrap-git]
+url = https://github.com/UnknownRori/raylib
+revision = meson
+depth = 1

@@ -1,0 +1,16 @@
+# cache folder
+.cache/
+
+# Build ouput folder
+webbuild/
+builddir/
+build/
+dist/
+
+# Meson
+compile_commands.json
+
+# Raw assets or something else
+*.png~
+*.kra~
+*.mscz~
