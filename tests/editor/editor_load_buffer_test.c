@@ -13,18 +13,15 @@ int main()
 
     EditorLoadBuffer(&e, contents, strlen(contents));
     assert(e.name == NULL && "File name must not is not initialized");
-    assert(e.line != NULL && "Line must be initialized");
-    assert(e.line->next != NULL && "Line.next must be initialized");
-    assert(e.line->next->next != NULL && "Line.next.next must be initialized");
+    assert(EditorGetTotalLine(&e) == 3 && "Line must be 3");
 
-    Line* l = e.line;
+    Line* l = EditorGetLine(&e, 0);
     assert(strcmp(l->buffer, "Agus\n") && "1st line must be Agus");
 
-    l = l->next;
+    l = EditorGetLine(&e, 1);
     assert(strcmp(l->buffer, "Pamungkas\n") && "2nd line must Pamungkas");
 
-    l = l->next;
-    fprintf(stderr, "%p", l->buffer);
+    l = EditorGetLine(&e, 2);
     assert(strcmp(l->buffer, "Bambang") && "3rd line must Bambang");
 
     EditorUnload(&e);

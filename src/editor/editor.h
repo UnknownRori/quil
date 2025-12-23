@@ -8,10 +8,13 @@ typedef struct Editor {
 
     const char* name;
     size_t      line_pos, column_pos;
-    Line*       line;
+    LineChunk   chunk;
 } Editor;
 
-int  EditorInit         (Editor* e);
-int  EditorLoadBuffer   (Editor* e, const char* buffer, size_t n);
-void EditorReset        (Editor* e);
-void EditorUnload       (Editor* e);
+int  EditorInit                 (Editor* e);
+int  EditorLoadBuffer           (Editor* e, const char* buffer, size_t n);
+void EditorReset                (Editor* e);
+void EditorUnload               (Editor* e);
+
+Line* EditorGetLine             (Editor* e, size_t line);
+size_t EditorGetTotalLine      (Editor* e);
