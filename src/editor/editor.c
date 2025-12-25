@@ -21,33 +21,17 @@ int  EditorInit  (Editor* e)
 int  EditorLoadBuffer   (Editor* e, const char* buffer, size_t n)
 {
     assert(e != NULL || buffer != NULL);
-
-    size_t copy_count = 0;
-    size_t i;
-    for (i = 0; i < n; i++) {
+    Line l = {0};
+    for(size_t i = 0; i < n; i++) {
         if (buffer[i] == '\n') {
-            Line l;
-            const char* start = buffer + i - copy_count;
-            l.buffer = rstb_arena_alloc(&e->arena, copy_count + 1);
-            memcpy(l.buffer, start, copy_count);
-            l.buffer[copy_count + 1] = 0;
-            l.capacity = copy_count;
-            l.count = copy_count;
             rstb_da_append(&e->chunk, l);
+            l = (Line){0};
+            continue;
         }
-        copy_count++;
-    }
 
-    if (copy_count > 0) {
-        Line l;
-        const char* start = buffer + i - copy_count;
-        l.buffer = rstb_arena_alloc(&e->arena, copy_count + 1);
-        memcpy(l.buffer, start, copy_count);
-        l.buffer[copy_count + 1] = 0;
-        l.capacity = copy_count;
-        l.count = copy_count;
-        rstb_da_append(&e->chunk, l);
+        rstb_da_append(&l, buffer[i]);
     }
+    rstb_da_append(&e->chunk, l);
 
     return 0;
 }
@@ -81,4 +65,90 @@ size_t EditorGetTotalLine      (Editor* e)
 {
     assert(e != NULL);
     return e->chunk.count;
+}
+
+void EditorIncSelectedLine      (Editor* e, int n)
+{
+    assert(e != NULL);
+    e->line_pos += n;
+    if (e->line_pos > (int)e->chunk.count - 1) {
+        e->line_pos = e->chunk.count - 1;
+    }
+
+    if (e->line_pos < 0) {
+        e->line_pos = 0;
+    }
+
+    EditorIncSelectedColumn(e, 0);
+}
+void EditorIncSelectedColumn    (Editor* e, int n)
+{
+    assert(e != NULL);
+    e->column_pos += n;
+    Line* l = EditorGetLine(e, e->line_pos);
+    if (e->column_pos < 0) {
+        e->column_pos = 0;
+    } else if (e->column_pos > l->count) {
+        e->column_pos = l->count;
+    }
+
+}
+
+void EditorSetSelectedColumnBeginning       (Editor* e)
+{
+    assert(e != NULL);
+    e->column_pos = 0;
+}
+
+void EditorSetSelectedColumnEnd             (Editor* e)
+{
+    Line* l = EditorGetLine(e, e->line_pos);
+    e->column_pos = l->count;
+}
+
+void EditorRemoveCharOnCurrentCursor      (Editor* e)
+{
+    assert(e != NULL);
+    if (e->column_pos == 0) {
+        assert(0 && "Not Implemented");
+        return ;
+    }
+    Line* l = EditorGetLine(e, e->line_pos);
+    memmove(
+        l->items + e->column_pos - 1, 
+        l->items + e->column_pos, 
+        l->count - e->column_pos
+    );
+    l->count -= 1;
+    l->items[l->count] = '\0';
+    EditorIncSelectedColumn(e, -1);
+}
+
+void EditorAppendCharOnCurrentCursor      (Editor* e, char n)
+{
+    assert(e != NULL);
+    Line* l = EditorGetLine(e, e->line_pos);
+    rstb_da_reserve(l, l->count + 2);
+    memmove(l->items + e->column_pos + 1, l->items + e->column_pos, l->count - e->column_pos);
+    l->items[e->column_pos] = n;
+    l->count += 1;
+    l->items[l->count + 1] = '\0';
+    EditorIncSelectedColumn(e, 1);
+}
+
+void EditorAddNewLineOnCurrentCursor      (Editor* e)
+{
+    assert(e != NULL);
+    if ((e->line_pos + 1) > e->chunk.count) {
+        return;
+    }
+    rstb_da_reserve(&e->chunk, e->chunk.count + 1);
+    memmove(e->chunk.items + e->line_pos + 1, e->chunk.items + e->line_pos, sizeof(Line) * e->chunk.count - sizeof(Line) * e->line_pos);
+
+    Line* l = EditorGetLine(e, e->line_pos);
+    LineReset(l);
+
+
+    e->chunk.count += 1;
+    EditorIncSelectedLine(e, 1);
 }

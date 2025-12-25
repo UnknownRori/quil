@@ -15,6 +15,7 @@ static void UpdateGame()
 
 int main()
 {
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI | FLAG_MSAA_4X_HINT);
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, APP_NAME);
     SetTargetFPS(GAME_TARGET_FPS);
     InitAudioDevice();

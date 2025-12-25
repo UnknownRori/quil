@@ -8,3 +8,4 @@
 
 #define RECT(X, Y, W, H) (Rectangle) {(X), (Y), (W), (H)}
 #define RECT_FROM_VEC2(VEC2, W, H) (Rectangle) {.x = (VEC2).x, .y = (VEC2).y, .width = (W), .height = (H)}
+#define RECT_FROM_VEC22(VEC2, VEC22) (Rectangle) {.x = (VEC2).x, .y = (VEC2).y, .width = (VEC22).x, .height = (VEC22).y}

@@ -7,7 +7,7 @@ typedef struct Editor {
     rstb_arena arena;
 
     const char* name;
-    size_t      line_pos, column_pos;
+    int      line_pos, column_pos;
     LineChunk   chunk;
 } Editor;
 
@@ -17,4 +17,13 @@ void EditorReset                (Editor* e);
 void EditorUnload               (Editor* e);
 
 Line* EditorGetLine             (Editor* e, size_t line);
-size_t EditorGetTotalLine      (Editor* e);
+size_t EditorGetTotalLine       (Editor* e);
+
+void EditorIncSelectedLine                  (Editor* e, int n);
+void EditorIncSelectedColumn                (Editor* e, int n);
+void EditorSetSelectedColumnBeginning       (Editor* e);
+void EditorSetSelectedColumnEnd             (Editor* e);
+
+void EditorRemoveCharOnCurrentCursor      (Editor* e);
+void EditorAddNewLineOnCurrentCursor      (Editor* e);
+void EditorAppendCharOnCurrentCursor      (Editor* e, char n);

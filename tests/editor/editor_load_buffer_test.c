@@ -16,13 +16,13 @@ int main()
     assert(EditorGetTotalLine(&e) == 3 && "Line must be 3");
 
     Line* l = EditorGetLine(&e, 0);
-    assert(strcmp(l->buffer, "Agus\n") && "1st line must be Agus");
+    assert(strcmp(l->items, "Agus\n") && "1st line must be Agus");
 
     l = EditorGetLine(&e, 1);
-    assert(strcmp(l->buffer, "Pamungkas\n") && "2nd line must Pamungkas");
+    assert(strcmp(l->items, "Pamungkas\n") && "2nd line must Pamungkas");
 
     l = EditorGetLine(&e, 2);
-    assert(strcmp(l->buffer, "Bambang") && "3rd line must Bambang");
+    assert(strcmp(l->items, "Bambang\n") && "3rd line must Bambang");
 
     EditorUnload(&e);
 

@@ -5,7 +5,7 @@ debug_src = files(
 debug_lib = static_library(
   'debug',
   debug_src,
-  dependencies: [raylib_dep, input_dep],
+  dependencies: [raylib_dep, input_dep, editor_dep],
   include_directories: [inc],
 )
 

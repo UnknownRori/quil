@@ -10,7 +10,6 @@ static Quil q;
 void AppInit()
 {
     ChangeDirectory(ASSETS_PATH);
-    SetWindowState(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI | FLAG_MSAA_4X_HINT);
     QuilInit(&q);
 }
 
