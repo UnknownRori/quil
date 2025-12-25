@@ -1,6 +1,7 @@
 editor_src = files(
   'editor.c',
   'node.c',
+  'time_travel.c',
 )
 
 editor_lib = static_library(

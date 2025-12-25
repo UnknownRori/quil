@@ -1,6 +1,7 @@
 #include <rstb_arena.h>
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -8,6 +9,7 @@
 #include "editor.h"
 #include "editor/node.h"
 #include "rstb_da.h"
+#include "time_travel.h"
 
 int  EditorInit  (Editor* e)
 {
@@ -67,6 +69,20 @@ size_t EditorGetTotalLine      (Editor* e)
     return e->chunk.count;
 }
 
+void EditorSetSelectedLine                  (Editor* e, int n)
+{
+    assert(e != NULL);
+    assert(e->chunk.count > n);
+    e->line_pos = n;
+}
+void EditorSetSelectedColumn                (Editor* e, int n)
+{
+    assert(e != NULL);
+    Line* l = EditorGetLine(e, e->line_pos);
+    assert(l->count + 1 > n);
+    e->column_pos = n;
+}
+
 void EditorIncSelectedLine      (Editor* e, int n)
 {
     assert(e != NULL);
@@ -106,7 +122,7 @@ void EditorSetSelectedColumnEnd             (Editor* e)
     e->column_pos = l->count;
 }
 
-void EditorRemoveCharOnCurrentCursor      (Editor* e)
+static void _EditorRemoveCharOnCursor(Editor* e, bool record)
 {
     assert(e != NULL);
     if (e->column_pos == 0) {
@@ -114,29 +130,61 @@ void EditorRemoveCharOnCurrentCursor      (Editor* e)
         return ;
     }
     Line* l = EditorGetLine(e, e->line_pos);
+    char n = l->items[e->column_pos-1];
     memmove(
         l->items + e->column_pos - 1, 
         l->items + e->column_pos, 
         l->count - e->column_pos
     );
+
+    if (record) {
+        UndoStackPush(&e->time_travel, (EditorCmd) {
+            .type = EDITOR_CMD_INSERT_CHAR,
+            .line = e->line_pos,
+            .col  = e->column_pos,
+            .character = n,
+        });
+    }
+
     l->count -= 1;
     l->items[l->count] = '\0';
     EditorIncSelectedColumn(e, -1);
 }
 
-void EditorAppendCharOnCurrentCursor      (Editor* e, char n)
+void EditorRemoveCharOnCurrentCursor      (Editor* e)
+{
+    _EditorRemoveCharOnCursor(e, true);
+}
+
+static void _EditorAppendCharOnCurrentCursor(Editor* e, char n, bool record)
 {
     assert(e != NULL);
     Line* l = EditorGetLine(e, e->line_pos);
     rstb_da_reserve(l, l->count + 2);
     memmove(l->items + e->column_pos + 1, l->items + e->column_pos, l->count - e->column_pos);
+
+    if (record) {
+        printf("push:%c\n", n);
+        UndoStackPush(&e->time_travel, (EditorCmd) {
+            .type = EDITOR_CMD_INSERT_CHAR,
+            .line = e->line_pos,
+            .col  = e->column_pos,
+            .character = n,
+        });
+    }
+
     l->items[e->column_pos] = n;
     l->count += 1;
     l->items[l->count + 1] = '\0';
     EditorIncSelectedColumn(e, 1);
 }
 
-void EditorAddNewLineOnCurrentCursor      (Editor* e)
+void EditorAppendCharOnCurrentCursor      (Editor* e, char n)
+{
+    _EditorAppendCharOnCurrentCursor(e, n, true);
+}
+
+static void _EditorAddNewLineOnCurrentCursor(Editor* e, bool record)
 {
     assert(e != NULL);
     if ((e->line_pos + 1) > e->chunk.count) {
@@ -148,7 +196,72 @@ void EditorAddNewLineOnCurrentCursor      (Editor* e)
     Line* l = EditorGetLine(e, e->line_pos);
     LineReset(l);
 
+    UndoStackPush(&e->time_travel, (EditorCmd) {
+        .type = EDITOR_CMD_INSERT_LINE,
+        .line = e->line_pos,
+        .col  = e->column_pos,
+    });
 
     e->chunk.count += 1;
     EditorIncSelectedLine(e, 1);
+}
+
+
+void EditorAddNewLineOnCurrentCursor      (Editor* e)
+{
+    _EditorAddNewLineOnCurrentCursor(e, true);
+}
+
+void EditorUndo                             (Editor* e)
+{
+    assert(e != NULL);
+    if (e->time_travel.top <= 0) {
+        return;
+    }
+    UndoStackPrev(&e->time_travel);
+    EditorCmd cmd = UndoStackCurrent(&e->time_travel);
+    switch (cmd.type) {
+        case EDITOR_CMD_INSERT_CHAR:
+            EditorSetSelectedLine(e, cmd.line);
+            EditorSetSelectedColumn(e, cmd.col + 1);
+            _EditorRemoveCharOnCursor(e, false);
+            break;
+        case EDITOR_CMD_DELETE_CHAR:
+            EditorSetSelectedLine(e, cmd.line);
+            EditorSetSelectedColumn(e, cmd.col);
+            _EditorAppendCharOnCurrentCursor(e, cmd.character, false);
+            break;
+        case EDITOR_CMD_INSERT_LINE:
+            EditorSetSelectedLine(e, cmd.line);
+            EditorSetSelectedColumn(e, cmd.col);
+            _EditorAddNewLineOnCurrentCursor(e, false);
+            break;
+    }
+}
+
+void EditorRedo                             (Editor* e)
+{
+    assert(e != NULL);
+    if (e->time_travel.top >= e->time_travel.count) {
+        return;
+    }
+    EditorCmd cmd = UndoStackCurrent(&e->time_travel);
+    UndoStackNext(&e->time_travel);
+    switch (cmd.type) {
+        case EDITOR_CMD_INSERT_CHAR:
+            EditorSetSelectedLine(e, cmd.line);
+            EditorSetSelectedColumn(e, cmd.col);
+            _EditorAppendCharOnCurrentCursor(e, cmd.character, false);
+            break;
+        case EDITOR_CMD_DELETE_CHAR:
+            EditorSetSelectedLine(e, cmd.line);
+            EditorSetSelectedColumn(e, cmd.col);
+            _EditorRemoveCharOnCursor(e, false);
+            break;
+        case EDITOR_CMD_INSERT_LINE:
+            EditorSetSelectedLine(e, cmd.line);
+            EditorSetSelectedColumn(e, cmd.col);
+            _EditorAddNewLineOnCurrentCursor(e, false);
+            break;
+    }
 }

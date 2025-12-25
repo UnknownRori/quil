@@ -43,8 +43,19 @@ void QuilUpdate(Quil* q)
         EditorIncSelectedColumn(&q->e, -1);
     }
 
-    if (q->input.key_press != 0) {
+    if ((q->input.key_press != 0) && ((q->input.modifier == 0) || (INPUT_MODIFIER_STATE(q->input.modifier, INPUT_SHIFT)))) {
         EditorAppendCharOnCurrentCursor(&q->e, q->input.key_press);
+    }
+
+    if (INPUT_MODIFIER_STATE(q->input.modifier, INPUT_CTRL) &&
+        INPUT_MODIFIER_STATE(q->input.modifier, INPUT_SHIFT) &&
+        IsKeyPressed(KEY_Z)) {
+        EditorRedo(&q->e);
+        TraceLog(LOG_INFO, "CTRL + SHIFT + Z pressed - Redo");
+    } else if (INPUT_MODIFIER_STATE(q->input.modifier, INPUT_CTRL) && 
+        IsKeyPressed(KEY_Z)) {
+        EditorUndo(&q->e);
+        TraceLog(LOG_INFO, "CTRL + Z pressed - Undo");
     }
     if (INPUT_MODIFIER_STATE(q->input.control, CONTROL_DELETE)) {
         EditorRemoveCharOnCurrentCursor(&q->e);
