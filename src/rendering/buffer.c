@@ -26,6 +26,8 @@ void RenderEditorBuffer(Font f, Editor* e, Vector2 pos)
         DrawTextEx(f, line_num, pos, font_size, spacing, GRAY);
         pos.x += measure.x;
 
+        DrawLineEx(VEC2(pos.x + 4, pos.y), VEC2(pos.x + 4, pos.y + measure.y), 1., GRAY);
+
         if (line->count == 0) {
             measure = MeasureTextEx(f, " ", font_size, spacing);
         } else {

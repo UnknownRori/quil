@@ -164,7 +164,6 @@ static void _EditorAppendCharOnCurrentCursor(Editor* e, char n, bool record)
     memmove(l->items + e->column_pos + 1, l->items + e->column_pos, l->count - e->column_pos);
 
     if (record) {
-        printf("push:%c\n", n);
         UndoStackPush(&e->time_travel, (EditorCmd) {
             .type = EDITOR_CMD_INSERT_CHAR,
             .line = e->line_pos,
@@ -187,20 +186,29 @@ void EditorAppendCharOnCurrentCursor      (Editor* e, char n)
 static void _EditorAddNewLineOnCurrentCursor(Editor* e, bool record)
 {
     assert(e != NULL);
-    if ((e->line_pos + 1) > e->chunk.count) {
+    if ((e->line_pos + 2) > e->chunk.count) {
+        Line l = {0};
+        rstb_da_append(&e->chunk, l);
+        EditorIncSelectedLine(e, 1);
         return;
     }
     rstb_da_reserve(&e->chunk, e->chunk.count + 1);
-    memmove(e->chunk.items + e->line_pos + 1, e->chunk.items + e->line_pos, sizeof(Line) * e->chunk.count - sizeof(Line) * e->line_pos);
+    memmove(
+        e->chunk.items + e->line_pos + 1, 
+        e->chunk.items + e->line_pos, 
+        sizeof(Line) * e->chunk.count - sizeof(Line) * e->line_pos
+    );
 
-    Line* l = EditorGetLine(e, e->line_pos);
+    Line* l = EditorGetLine(e, e->line_pos + 1);
     LineReset(l);
 
-    UndoStackPush(&e->time_travel, (EditorCmd) {
-        .type = EDITOR_CMD_INSERT_LINE,
-        .line = e->line_pos,
-        .col  = e->column_pos,
-    });
+    if (record) {
+        UndoStackPush(&e->time_travel, (EditorCmd) {
+            .type = EDITOR_CMD_INSERT_LINE,
+            .line = e->line_pos,
+            .col  = e->column_pos,
+        });
+    }
 
     e->chunk.count += 1;
     EditorIncSelectedLine(e, 1);
